@@ -1,0 +1,69 @@
+generator client {
+provider = "prisma-client-js"
+}
+
+datasource db {
+provider = "postgresql"
+url      = env("DATABASE_URL")
+}
+
+model User {
+id        String   @id @default(uuid())
+email     String   @unique
+username  String?  @unique
+fullName  String?  @map("full_name")
+bio       String?
+avatarUrl String?  @map("avatar_url")
+createdAt DateTime @default(now()) @map("created_at")
+updatedAt DateTime @updatedAt @map("updated_at")
+
+// Relations
+tweets    Tweet[]
+likes     Like[]
+followers Follow[] @relation("following")
+following Follow[] @relation("follower")
+
+@@map("users")
+}
+
+model Tweet {
+id        String   @id @default(uuid())
+content   String
+createdAt DateTime @default(now()) @map("created_at")
+userId    String   @map("user_id")
+mediaUrl  String?  @map("media_url")
+mediaType String?  @map("media_type") 
+// Relations
+user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+likes     Like[]
+
+@@map("tweets")
+}
+
+model Like {
+id        String   @id @default(uuid())
+tweetId   String   @map("tweet_id")
+userId    String   @map("user_id")
+createdAt DateTime @default(now()) @map("created_at")
+
+// Relations
+tweet     Tweet    @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+@@unique([tweetId, userId])
+@@map("likes")
+}
+
+model Follow {
+id          String   @id @default(uuid())
+followerId  String   @map("follower_id")
+followingId String   @map("following_id")
+createdAt   DateTime @default(now()) @map("created_at")
+
+// Relations
+follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+@@unique([followerId, followingId])
+@@map("follows")
+}
