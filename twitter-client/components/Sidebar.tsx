@@ -50,6 +50,9 @@ function Sidebar() {
     {
       title: "Messages",
       icon: <HiOutlineMail />,
+      onClick: () => {
+        window.open("https://x.com/satyawani_aman", "_blank", "noopener,noreferrer");
+      },
     },
     {
       title: "Lists",
@@ -95,13 +98,15 @@ function Sidebar() {
         <ul>
           {sidebarMenuItems.map((item) => (
             <li
-              className="flex items-center md:justify-center lg:justify-start gap-4 hover:bg-gray-700/20 rounded-full p-3 w-fit cursor-pointer transition-colors"
+              className={`flex items-center md:justify-center lg:justify-start gap-4 hover:bg-gray-700/20 rounded-full p-3 w-fit cursor-pointer transition-colors ${
+                item.title === "Messages" ? "hover:text-blue-400" : ""
+              }`}
               key={item.title}
               onClick={() => handleItemClick(item)}
             >
               <span className="text-2xl">{item.icon}</span>
               <span className="hidden lg:inline text-xl font-semibold">
-                {item.title}
+                {item.title === "Messages" ? "Reach out to me" : item.title}
               </span>
             </li>
           ))}
