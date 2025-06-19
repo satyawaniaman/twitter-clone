@@ -12,10 +12,28 @@ import authRoutes from "./routes/auth";
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
-
+const corsOptions = {
+  origin:
+    process.env.NODE_ENV === "production"
+      ? ["https://yourdomain.com"]
+      : ["http://localhost:3000", "http://localhost:3001"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 // Middleware
-app.use(helmet());
-app.use(cors());
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false, // If you need to embed resources
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        connectSrc: ["'self'", "https://api.supabase.co"], // For Supabase
+      },
+    },
+  })
+);
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes

@@ -1,4 +1,3 @@
-// src/routes/users.ts
 import express, { Request } from "express";
 import { PrismaClient } from "@prisma/client";
 import { protect, AuthRequest } from "../middleware/auth";
@@ -36,7 +35,7 @@ const upload = multer({
     }
   },
 });
-// Get user profile
+
 router.get("/:username", async (req, res) => {
   try {
     const { username } = req.params;
@@ -72,12 +71,10 @@ router.get("/:username", async (req, res) => {
   }
 });
 
-// Update user profile (protected)
 router.put("/profile", protect, async (req: AuthRequest, res) => {
   try {
     const { username, fullName, bio, avatarUrl } = req.body;
 
-    // Check if username is taken
     if (username) {
       const existingUser = await prisma.user.findUnique({
         where: { username },
@@ -106,7 +103,6 @@ router.put("/profile", protect, async (req: AuthRequest, res) => {
   }
 });
 
-// Follow a user
 router.post("/follow/:userId", protect, async (req: AuthRequest, res) => {
   try {
     const { userId } = req.params;
@@ -116,7 +112,6 @@ router.post("/follow/:userId", protect, async (req: AuthRequest, res) => {
       return;
     }
 
-    // Check if target user exists
     const targetUser = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -126,7 +121,6 @@ router.post("/follow/:userId", protect, async (req: AuthRequest, res) => {
       return;
     }
 
-    // Check if already following
     const existingFollow = await prisma.follow.findUnique({
       where: {
         followerId_followingId: {
@@ -141,7 +135,6 @@ router.post("/follow/:userId", protect, async (req: AuthRequest, res) => {
       return;
     }
 
-    // Create follow
     await prisma.follow.create({
       data: {
         followerId: req.user.id,
@@ -155,8 +148,7 @@ router.post("/follow/:userId", protect, async (req: AuthRequest, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-// src/routes/users.ts
-// Add a route to update profile picture
+
 router.put(
   "/profile-picture",
   protect,
@@ -167,16 +159,14 @@ router.put(
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      // Create a unique filename
       const fileExt = path.extname(req.file.originalname);
       const fileName = `avatar-${req.user.id}${fileExt}`;
 
-      // Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from("profile-pictures")
         .upload(fileName, req.file.buffer, {
           contentType: req.file.mimetype,
-          upsert: true, // Override if exists
+          upsert: true,
         });
 
       if (error) {
@@ -186,12 +176,10 @@ router.put(
           .json({ message: "Failed to upload profile picture" });
       }
 
-      // Get public URL
       const {
         data: { publicUrl },
       } = supabase.storage.from("profile-pictures").getPublicUrl(fileName);
 
-      // Update user profile with new avatar URL
       const updatedUser = await prisma.user.update({
         where: { id: req.user.id },
         data: { avatarUrl: publicUrl },

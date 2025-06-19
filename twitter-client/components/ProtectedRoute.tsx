@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase";
+import axios from "axios";
 
 export default function ProtectedRoute({
   children,
@@ -11,6 +12,19 @@ export default function ProtectedRoute({
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+
+  // Function to sync user with database
+  const syncUserWithDatabase = async (userId: string, userEmail: string) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      await axios.post(`${apiUrl}/api/auth/user`, {
+        user_id: userId,
+        email: userEmail,
+      });
+    } catch (error) {
+      console.error('Error syncing user with database:', error);
+    }
+  };
 
   useEffect(() => {
     const checkUser = async () => {
@@ -21,6 +35,10 @@ export default function ProtectedRoute({
       if (!session) {
         router.push("/pages/auth");
       } else {
+        // Ensure user exists in database
+        if (session.user) {
+          await syncUserWithDatabase(session.user.id, session.user.email || '');
+        }
         setLoading(false);
       }
     };
@@ -29,9 +47,12 @@ export default function ProtectedRoute({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_OUT") {
         router.push("/pages/auth");
+      } else if ((event === "SIGNED_IN" || event === "USER_UPDATED") && session) {
+        // Ensure user exists in database after sign in
+        await syncUserWithDatabase(session.user.id, session.user.email || '');
       }
     });
 

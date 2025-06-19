@@ -19,6 +19,17 @@ export default function ProfileSection() {
     };
 
     fetchUser();
+    
+    // Listen for avatar updates to refresh user data
+    const handleAvatarUpdate = () => {
+      fetchUser(); // Refetch user data when avatar is updated
+    };
+    
+    window.addEventListener('avatarUpdated', handleAvatarUpdate);
+    
+    return () => {
+      window.removeEventListener('avatarUpdated', handleAvatarUpdate);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -41,25 +52,26 @@ export default function ProfileSection() {
         className="flex items-center gap-3 p-3 rounded-full hover:bg-gray-700/20 cursor-pointer transition-colors"
         onClick={() => setShowDropdown(!showDropdown)}
       >
-        <div className="w-10 h-10 rounded-full overflow-hidden relative">
+        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden relative flex-shrink-0">
           <Image
             src={avatarUrl}
             alt={displayName}
             fill
+            sizes="(max-width: 768px) 32px, 40px"
             className="object-cover"
           />
         </div>
-        <div className="flex-1">
-          <p className="font-bold text-sm">{displayName}</p>
-          <p className="text-gray-500 text-xs">
+        <div className="hidden lg:block flex-1 min-w-0">
+          <p className="font-bold text-sm truncate">{displayName}</p>
+          <p className="text-gray-500 text-xs truncate">
             @{displayName.toLowerCase().replace(/\s/g, "")}
           </p>
         </div>
-        <div className="text-xl">•••</div>
+        <div className="hidden lg:block text-xl">•••</div>
       </div>
 
       {showDropdown && (
-        <div className="absolute bottom-full mb-2 left-0 bg-black border border-gray-700 rounded-xl shadow-lg w-60 overflow-hidden">
+        <div className="absolute bottom-full mb-2 left-0 bg-black border border-gray-700 rounded-xl shadow-lg w-60 overflow-hidden z-50">
           <div
             className="p-4 hover:bg-gray-700/20 cursor-pointer transition-colors"
             onClick={handleLogout}

@@ -1,109 +1,151 @@
-import React from "react";
-import { BsTwitterX, BsBookmark } from "react-icons/bs";
-import { AiFillHome } from "react-icons/ai";
-import { BiSearch } from "react-icons/bi";
-import { IoNotificationsOutline } from "react-icons/io5";
-import { HiOutlineMail } from "react-icons/hi";
-import { RiFileListLine } from "react-icons/ri";
-import { CgProfile } from "react-icons/cg";
-import { CiCircleMore } from "react-icons/ci";
-import { CustomButton } from "@/components/CustomButton";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import FeedCard from "@/components/FeedCard";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import ProfileSection from "@/components/ProfileSection";
 import TweetInput from "@/components/TweetInput";
+import Sidebar from "@/components/Sidebar";
+import MobileNavigation from "@/components/MobileNavigation";
+import axios from "axios";
 
-interface TwitterSidebarButton {
-  title: string;
-  icon: React.ReactNode;
+interface Tweet {
+  id: string;
+  content: string;
+  mediaUrl?: string;
+  mediaType?: string;
+  createdAt: string;
+  user: {
+    id: string;
+    username: string;
+    avatarUrl: string;
+  };
+  _count: {
+    likes: number;
+  };
 }
-const sidebarMenuItems: TwitterSidebarButton[] = [
-  {
-    title: "Home",
-    icon: <AiFillHome />,
-  },
-  {
-    title: "Explore",
-    icon: <BiSearch />,
-  },
-  {
-    title: "Notifications",
-    icon: <IoNotificationsOutline />,
-  },
-  {
-    title: "Messages",
-    icon: <HiOutlineMail />,
-  },
-  {
-    title: "Lists",
-    icon: <RiFileListLine />,
-  },
-  {
-    title: "Bookmarks",
-    icon: <BsBookmark />,
-  },
-  {
-    title: "Profile",
-    icon: <CgProfile />,
-  },
-  {
-    title: "More",
-    icon: <CiCircleMore />,
-  },
-];
+
 export default function Home() {
+  const [tweets, setTweets] = useState<Tweet[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+
+  const fetchTweets = async (cursor?: string) => {
+    try {
+      setLoading(true);
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      if (!backendUrl) {
+        setError("Backend URL not configured");
+        return;
+      }
+
+      const url = cursor
+        ? `${backendUrl}/api/tweets?cursor=${cursor}`
+        : `${backendUrl}/api/tweets`;
+
+      const response = await axios.get(url);
+
+      if (cursor) {
+        setTweets((prev) => [...prev, ...response.data.tweets]);
+      } else {
+        setTweets(response.data.tweets);
+      }
+
+      setNextCursor(response.data.nextCursor);
+    } catch (err) {
+      console.error("Error fetching tweets:", err);
+      setError("Failed to load tweets");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTweets();
+    
+    // Listen for avatar updates to refresh tweets
+    const handleAvatarUpdate = (event: CustomEvent) => {
+      const { userId, newAvatarUrl } = event.detail;
+      setTweets(prevTweets => 
+        prevTweets.map(tweet => 
+          tweet.user.id === userId 
+            ? { ...tweet, user: { ...tweet.user, avatarUrl: newAvatarUrl } }
+            : tweet
+        )
+      );
+    };
+    
+    window.addEventListener('avatarUpdated', handleAvatarUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('avatarUpdated', handleAvatarUpdate as EventListener);
+    };
+  }, []);
+
+  const loadMoreTweets = () => {
+    if (nextCursor) {
+      fetchTweets(nextCursor);
+    }
+  };
+
   return (
     <ProtectedRoute>
-      <div className="grid grid-cols-10 h-screen w-screen px-4">
-        {/* Left sidebar */}
-        <div className="col-span-3 pt-1 pl-28 flex flex-col h-full">
-          <div className="p-3 text-2xl hover:bg-gray-700/20 rounded-full flex items-center justify-center cursor-pointer transition-colors w-fit">
-            <BsTwitterX />
-          </div>
-          <div className="text-xl font-bold mt-4 flex flex-col flex-grow">
-            <ul>
-              {sidebarMenuItems.map((item) => (
-                <li
-                  className="flex items-center gap-4 hover:bg-gray-700/20 rounded-full p-3 w-fit cursor-pointer transition-colors"
-                  key={item.title}
-                >
-                  <span>{item.icon}</span>
-                  <span>{item.title}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-4 mb-4">
-              <CustomButton>Post</CustomButton>
-            </div>
-
-            {/* Add margin-top: auto to push the profile section to the bottom */}
-            <div className="mt-auto">
-              <ProfileSection />
-            </div>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 h-screen w-screen max-w-7xl mx-auto">
+        {/* Left sidebar - hidden on mobile, visible on md screens and up */}
+        <div className="hidden md:block md:col-span-1 lg:col-span-3">
+          <Sidebar />
         </div>
 
-        {/* Main content */}
-        <div className="col-span-4 border-x border-gray-800 h-screen overflow-scroll">
-          {/* Home header */}
-          <div className="sticky top-0 backdrop-blur-md bg-black/70 z-10">
-            <h1 className="text-xl font-bold p-4 border-b border-gray-800">
-              Home
-            </h1>
+        {/* Main content - full width on mobile, adjusted on larger screens */}
+        <div className="col-span-1 md:col-span-3 lg:col-span-6 border-x border-gray-800 overflow-y-auto">
+          <div className="sticky top-0 bg-black z-10 border-b border-gray-800 p-3 sm:p-4">
+            <h1 className="text-xl font-bold">Home</h1>
           </div>
-
-          {/* Tweet input component */}
           <TweetInput />
-
-          {/* Feed content */}
-          <FeedCard />
-          <FeedCard />
-          <FeedCard />
-          <FeedCard />
+          {loading && tweets.length === 0 ? (
+            <div className="flex justify-center p-4">
+              <p className="text-gray-500 text-sm sm:text-base">
+                Loading tweets...
+              </p>
+            </div>
+          ) : error ? (
+            <div className="flex justify-center p-4">
+              <p className="text-red-500 text-sm sm:text-base">{error}</p>
+            </div>
+          ) : (
+            <>
+              {tweets.map((tweet) => (
+                <FeedCard key={tweet.id} tweet={tweet} />
+              ))}
+              {nextCursor && (
+                <div className="flex justify-center p-4">
+                  <button
+                    onClick={loadMoreTweets}
+                    className="text-blue-500 hover:text-blue-600 text-sm sm:text-base px-4 py-2 rounded-full hover:bg-blue-500/10 transition-colors"
+                    disabled={loading}
+                  >
+                    {loading ? "Loading..." : "Load more tweets"}
+                  </button>
+                </div>
+              )}
+              {tweets.length === 0 && (
+                <div className="flex justify-center p-4">
+                  <p className="text-gray-500 text-sm sm:text-base">
+                    No tweets found. Be the first to tweet!
+                  </p>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
-        {/* Right sidebar */}
-        <div className="col-span-3"></div>
+        {/* Right sidebar - hidden on mobile and md screens, visible on lg screens */}
+        <div className="hidden lg:block lg:col-span-3 p-4">
+          {/* Add content for right sidebar here */}
+        </div>
+
+        {/* Mobile navigation component */}
+        <MobileNavigation />
       </div>
     </ProtectedRoute>
   );
