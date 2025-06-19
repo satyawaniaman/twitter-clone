@@ -42,7 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Function to sync user with database and fetch profile
   const syncUserWithDatabase = async (user: User) => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+      const apiUrl =
+        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
       await axios.post(`${apiUrl}/api/auth/user`, {
         user_id: user.id,
         email: user.email,

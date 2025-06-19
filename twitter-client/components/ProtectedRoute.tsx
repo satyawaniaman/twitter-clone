@@ -16,13 +16,14 @@ export default function ProtectedRoute({
   // Function to sync user with database
   const syncUserWithDatabase = async (userId: string, userEmail: string) => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl =
+        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
       await axios.post(`${apiUrl}/api/auth/user`, {
         user_id: userId,
         email: userEmail,
       });
     } catch (error) {
-      console.error('Error syncing user with database:', error);
+      console.error("Error syncing user with database:", error);
     }
   };
 
@@ -37,7 +38,7 @@ export default function ProtectedRoute({
       } else {
         // Ensure user exists in database
         if (session.user) {
-          await syncUserWithDatabase(session.user.id, session.user.email || '');
+          await syncUserWithDatabase(session.user.id, session.user.email || "");
         }
         setLoading(false);
       }
@@ -50,9 +51,12 @@ export default function ProtectedRoute({
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_OUT") {
         router.push("/pages/auth");
-      } else if ((event === "SIGNED_IN" || event === "USER_UPDATED") && session) {
+      } else if (
+        (event === "SIGNED_IN" || event === "USER_UPDATED") &&
+        session
+      ) {
         // Ensure user exists in database after sign in
-        await syncUserWithDatabase(session.user.id, session.user.email || '');
+        await syncUserWithDatabase(session.user.id, session.user.email || "");
       }
     });
 

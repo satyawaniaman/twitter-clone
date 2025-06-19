@@ -18,13 +18,14 @@ export default function SignUp() {
   // Function to sync user with database
   const syncUserWithDatabase = async (userId: string, userEmail: string) => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl =
+        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
       await axios.post(`${apiUrl}/api/auth/user`, {
         user_id: userId,
         email: userEmail,
       });
     } catch (error) {
-      console.error('Error syncing user with database:', error);
+      console.error("Error syncing user with database:", error);
     }
   };
 
@@ -55,12 +56,12 @@ export default function SignUp() {
         });
 
         if (error) throw error;
-        
+
         if (data?.user) {
           // Ensure user exists in database
           await syncUserWithDatabase(data.user.id, data.user.email || email);
         }
-        
+
         router.push("/pages/home");
       }
     } catch (error: unknown) {
@@ -83,7 +84,7 @@ export default function SignUp() {
         },
       });
       if (error) throw error;
-      
+
       // Note: For OAuth providers, we rely on the AuthContext to sync the user
       // after the redirect back to our app, as we don't have access to the user here
     } catch (error: unknown) {
@@ -105,7 +106,7 @@ export default function SignUp() {
       });
 
       if (error) throw error;
-      
+
       // Note: For OAuth providers, we rely on the AuthContext to sync the user
       // after the redirect back to our app, as we don't have access to the user here
     } catch (error: unknown) {
@@ -133,7 +134,9 @@ export default function SignUp() {
 
       {/* Right side with login/signup form */}
       <div className="w-full md:w-1/2 p-6 md:p-8 lg:p-12 flex flex-col justify-center">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-8 lg:mb-12">Happening now</h1>
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-8 lg:mb-12">
+          Happening now
+        </h1>
         <h2 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">
           {isSignUp ? "Join today." : "Sign in to X"}
         </h2>
