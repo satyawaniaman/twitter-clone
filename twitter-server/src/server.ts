@@ -27,7 +27,10 @@ app.use(
 );
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: [
+      "https://twitter-clone-llh1.vercel.app",
+      `${process.env.FRONTEND_URL}`,
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
