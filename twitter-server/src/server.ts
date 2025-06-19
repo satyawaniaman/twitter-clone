@@ -51,6 +51,9 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
 
 // Handle shutdown gracefully
 process.on("SIGINT", async () => {
