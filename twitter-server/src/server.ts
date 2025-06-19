@@ -12,15 +12,7 @@ import authRoutes from "./routes/auth";
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
-const corsOptions = {
-  origin:
-    process.env.NODE_ENV === "production"
-      ? ["https://yourdomain.com"]
-      : ["http://localhost:3000", "http://localhost:3001"],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
+
 // Middleware
 app.use(
   helmet({
@@ -33,7 +25,17 @@ app.use(
     },
   })
 );
-app.use(cors(corsOptions));
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? process.env.FRONTEND_URL
+        : ["http://localhost:3000", "http://localhost:3001"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(express.json());
 
 // Routes

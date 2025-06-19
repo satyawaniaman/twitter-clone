@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
       "lh3.googleusercontent.com",
       "abs.twimg.com",
       "zkyfqhujeohggpjdpqss.supabase.co",
+      "twitter-clone-72fa.onrender.com",
     ],
   },
 };
